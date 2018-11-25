@@ -1,0 +1,21 @@
+
+	**************************
+	**			**
+	**	TODO-list	**
+	**			**
+	**************************
+
+
+Current development: dealing with collisions and how they are
+temporally ordered within a timestep.
+
+
+
+4) Machine:
+   4.1	 Add a system of periodic evolution of the springs.
+   4.2	 Add the three functionalities used for the genetic algorithm:
+   	 4.2.1	 Create offspring (new machines based on existing ones);
+	 4.2.2	 Mutate each machine
+	 4.2.3	 Sort the machines by performance and remove the worst ones.
+   4.3   Add horizontal friction for Block-Machine contacts.
+.
