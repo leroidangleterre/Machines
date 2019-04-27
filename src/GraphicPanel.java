@@ -229,6 +229,12 @@ public class GraphicPanel extends JPanel {
 
     public void mutate() {
         world.mutate();
+        repaint();
+    }
+
+    public void breed() {
+        world.breed();
+        repaint();
     }
 
 }

@@ -257,4 +257,16 @@ public class World {
             m.mutate();
         }
     }
+
+    /**
+     * Create new machines from the existing.
+     */
+    public void breed() {
+
+        ArrayList<Machine> clones = new ArrayList<>();
+        for (Machine m : machineList) {
+            clones.add(m.clone());
+        }
+        machineList.addAll(clones);
+    }
 }

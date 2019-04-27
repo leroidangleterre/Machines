@@ -14,6 +14,7 @@ public class Toolbar extends JPanel {
     private JButton buttonEvolve;
     private JButton buttonSuperposition;
     private JButton buttonMutate;
+    private JButton buttonBreed;
 
     private GraphicPanel panel;
 
@@ -60,6 +61,14 @@ public class Toolbar extends JPanel {
             }
         });
         this.add(this.buttonMutate);
+
+        this.buttonBreed = new JButton("Breed");
+        this.buttonBreed.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                panel.breed();
+            }
+        });
+        this.add(this.buttonBreed);
     }
 
     public void setKeyListener(KeyboardListener k) {
@@ -67,5 +76,7 @@ public class Toolbar extends JPanel {
         this.buttonStart.addKeyListener(k);
         this.buttonEvolve.addKeyListener(k);
         this.buttonSuperposition.addKeyListener(k);
+        this.buttonMutate.addKeyListener(k);
+        this.buttonBreed.addKeyListener(k);
     }
 }

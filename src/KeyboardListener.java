@@ -47,6 +47,9 @@ public class KeyboardListener implements KeyListener {
             case 'b':
                 panel.blockSpeeds();
                 break;
+            case 'm':
+                panel.mutate();
+                break;
             case '*':
                 panel.increaseSpringSize(1.1);
                 break;

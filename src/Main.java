@@ -7,7 +7,7 @@ public class Main {
 
         System.out.println("This is the main.");
 
-        int nbMachines = 36;
+        int nbMachines = 1;
         World world = new World(nbMachines);
         GraphicPanel panel = new GraphicPanel(world);
         Window window = new Window(panel);
