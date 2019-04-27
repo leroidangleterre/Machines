@@ -99,7 +99,7 @@ public class Solid {
 
     /* Rotate the solid around the point of coordinates (x0, y0). */
     public void rotate(double angle, double x0, double y0) {
-		// TODO
+        // TODO
 
     }
 
@@ -114,7 +114,7 @@ public class Solid {
             double x0, double y0, double zoom,
             int panelHeight) {
 
-		// System.out.println("Solid.displayTrack: size = " + this.trail.size());
+        // System.out.println("Solid.displayTrack: size = " + this.trail.size());
 		/* Display the list of previous positions of the solid. */
         for (int i = 0; i < this.trail.size(); i++) {
 

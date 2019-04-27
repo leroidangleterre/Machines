@@ -16,6 +16,9 @@ import java.util.ArrayList;
 
 public class Machine {
 
+    private static int nbMachinesCreated = 0;
+    private int machineID;
+
     private ArrayList<Point> pointList;
     private ArrayList<Spring> springList;
 
@@ -26,13 +29,62 @@ public class Machine {
      each two points have a probability of 0.3 of being linked together.
      */
     public Machine() {
-        this.pointList = new ArrayList<Point>();
-        this.springList = new ArrayList<Spring>();
+        this.machineID = nbMachinesCreated;
+        nbMachinesCreated++;
 
-        this.buildMachine(1);
+        this.pointList = new ArrayList<>();
+        this.springList = new ArrayList<>();
+
+        this.buildMachine(0);
 
         this.gx = 0;
         this.gy = 0;
+    }
+
+    /**
+     * Create a deep copy of the parameter, with points at the same coordinates
+     * and springs between the same pairs of points.
+     *
+     * @param model
+     */
+    public Machine(Machine model) {
+        this();
+
+        this.pointList = new ArrayList<>();
+        this.springList = new ArrayList<>();
+
+        for (Point p : model.pointList) {
+            this.pointList.add(p.clone());
+        }
+        for (Spring s : model.springList) {
+            Spring newSpring = new Spring();
+            this.springList.add(newSpring);
+        }
+
+        // Link each one of the new points to the appropriate springs.
+        int pointIndex = 0;
+        for (Point p : model.pointList) {
+            // Identify all springs linked to the current point
+            int springIndex = 0;
+            for (Spring s : model.springList) {
+                if (s.usesPoint(p)) {
+                    this.springList.get(springIndex).addPoint(this.pointList.get(pointIndex));
+                }
+                springIndex++;
+            }
+            pointIndex++;
+        }
+
+        for (int i = 0; i < springList.size(); i++) {
+            this.springList.get(i).setL0(model.springList.get(i).getL0());
+        }
+
+        this.gx = model.gx;
+        this.gy = model.gy;
+    }
+
+    public Machine clone() {
+        return new Machine(this);
     }
 
     /**
@@ -44,8 +96,7 @@ public class Machine {
      * @value 2: two spheres
      * @value 3: three spheres, one spring
      * @value 4: triangular mesh of points
-     * @value 5: square-based
-     * rectangular mesh, with each square getting two diagonals.
+     * @value 5: square-based rectangular mesh, with each square getting two diagonals.
      */
     private void buildMachine(int type) {
         this.buildMachine(type, false);
@@ -58,7 +109,7 @@ public class Machine {
         switch (type) {
             case 0:
                 /* Regular polygon */
-                int nbPoints = 10;
+                int nbPoints = 4;
                 double x,
                  y;
                 double radius = 5;
@@ -102,13 +153,12 @@ public class Machine {
             case 4:
                 /* Triangular mesh of points. */
                 int size = 13;
-                list = new ArrayList<ArrayList<Point>>();
+                list = new ArrayList<>();
                 for (int i = 0; i < size; i++) {
-                    list.add(i, new ArrayList<Point>());
+                    list.add(i, new ArrayList<>());
                     for (int j = 0; j <= i; j++) {
                         float xPoint = (float) (3 * (j - 0.5 * (double) i));
                         float yPoint = (float) (2.7 * (size - i) - 0.7);
-                        System.out.println("yPoint: " + yPoint);
                         Point p = new Point(xPoint, yPoint, 1);
                         list.get(i).add(p);
                         this.pointList.add(p);
@@ -132,13 +182,11 @@ public class Machine {
                 int height = 10;
                 double dx = 3;
 
-                list = new ArrayList<ArrayList<Point>>();
+                list = new ArrayList<>();
 
                 for (int i = 0; i < height; i++) {
-                    System.out.println("i = " + i);
-                    list.add(new ArrayList<Point>());
+                    list.add(new ArrayList<>());
                     for (int j = 0; j < width; j++) {
-                        System.out.println("j = " + j);
                         Point p = new Point(dx * ((double) j - (double) width / 2 + .5), dx * ((double) i - (double) height / 2 + .5 + 5), 1);
                         this.pointList.add(p);
                         list.get(i).add(p);
@@ -163,6 +211,26 @@ public class Machine {
             default:
                 break;
         }
+    }
+
+    @Override
+    public String toString() {
+        String res = "" + pointList.size();
+        for (Point p : pointList) {
+            res += " " + p.getX() + " " + p.getY() + " - ";
+        }
+        res += "" + springList.size();
+        for (Spring s : springList) {
+            // Identify the two ends of the spring, write the indices.
+            int pointIndex = 0;
+            for (Point p : pointList) {
+                if (s.usesPoint(null)) {
+
+                }
+                pointIndex++;
+            }
+        }
+        return res;
     }
 
     public void display(Graphics g,
@@ -226,7 +294,6 @@ public class Machine {
      3) All points are moved.
      */
     public void evolve(double dt) {
-        // System.out.println("Machine: evolve(" + dt + ");");
         this.computeForces(dt);
         this.updateSpeeds(dt);
         this.updateSprings();
@@ -261,7 +328,6 @@ public class Machine {
      while keeping that list order relatively to time. */
     private void insertCollision(Collision newColl, ArrayList<Collision> list) {
 
-        // System.out.println("Machine.insertCollisions");
         if (list != null) {
             int i = 0;
             try {
@@ -276,8 +342,6 @@ public class Machine {
             }
             list.add(i, newColl);
         }
-
-        // System.out.println("Machine.insertCollisions end");
     }
 
     /* Detect the collisions between the points of this machine,
@@ -285,7 +349,7 @@ public class Machine {
     public ArrayList<Collision> findSelfCollisions() {
 
         // System.out.println("Machine.findSelfCollisions");
-        ArrayList<Collision> list = new ArrayList<Collision>();
+        ArrayList<Collision> list = new ArrayList<>();
 
         // TODO
         for (int i = 0; i < this.pointList.size(); i++) {
@@ -299,7 +363,6 @@ public class Machine {
             }
         }
 
-        // System.out.println("Machine.findSelfCollisions end");
         return list;
     }
 
@@ -318,8 +381,89 @@ public class Machine {
         }
     }
 
+    /**
+     * Add a new Point at a random location, and link that point to the machine
+     * with two springs.
+     */
     public void addRandomPoint() {
 
+        double margin = 5; // how far the new point is allowed to be
+
+        double xMin = getXMin() - margin;
+        double xMax = getXMax() + margin;
+        double yMin = getYMin() - margin;
+        double yMax = getYMax() + margin;
+
+        double x = xMin + Math.random() * (xMax - xMin);
+        double y = yMin + Math.random() * (yMax - yMin);
+
+        Point newPoint = new Point(x, y, 1);
+
+        int size = pointList.size();
+        if (size >= 1) {
+            // Create one spring.
+            int index0 = (int) (size * Math.random());
+            Spring spring0 = new Spring(newPoint, pointList.get(index0));
+            springList.add(spring0);
+            if (size >= 2) {
+                // Create another spring
+                int index1 = (int) (size * Math.random());
+                // but not from the same point as the first spring !
+                if (index1 == index0) {
+                    index1 = index1 + 1;
+                    if (index1 >= size) {
+                        index1 = 0;
+                    }
+                }
+                Spring spring1 = new Spring(newPoint, pointList.get(index1));
+                springList.add(spring1);
+            }
+        }
+        pointList.add(newPoint);
+    }
+
+    /**
+     * Find the minimum x-value of the machine.
+     */
+    public double getXMin() {
+        double xMin = Double.POSITIVE_INFINITY;
+        for (Point p : pointList) {
+            xMin = Math.min(p.getX(), xMin);
+        }
+        return xMin;
+    }
+
+    /**
+     * Find the maximum x-value of the machine.
+     */
+    public double getXMax() {
+        double xMin = Double.NEGATIVE_INFINITY;
+        for (Point p : pointList) {
+            xMin = Math.max(p.getX(), xMin);
+        }
+        return xMin;
+    }
+
+    /**
+     * Find the minimum y-value of the machine.
+     */
+    public double getYMin() {
+        double yMin = Double.POSITIVE_INFINITY;
+        for (Point p : pointList) {
+            yMin = Math.min(p.getY(), yMin);
+        }
+        return yMin;
+    }
+
+    /**
+     * Find the maximum y-value of the machine.
+     */
+    public double getYMax() {
+        double yMax = Double.NEGATIVE_INFINITY;
+        for (Point p : pointList) {
+            yMax = Math.max(p.getY(), yMax);
+        }
+        return yMax;
     }
 
     public void changeRandomSpringLength() {
