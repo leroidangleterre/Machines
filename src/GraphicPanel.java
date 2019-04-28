@@ -15,7 +15,7 @@ public class GraphicPanel extends JPanel {
      The zoom value is the amount of pixels between that origin
      and the point of coordinates (1, 0).  */
     private double x0, y0, zoom;
-    private int nbMachinesPerCol = 8; // When not superposed, how many columns we want to see
+    private int nbMachinesPerCol = 40; // When not superposed, how many columns we want to see
 
     private World world;
     private Timer timer;
@@ -29,7 +29,7 @@ public class GraphicPanel extends JPanel {
 
     /* Either the machines are superposed (each one is displayed in the same referential),
      or they all have their own referential. */
-    private boolean superposed = true;
+    private boolean superposed = false;
 
     public GraphicPanel(Window w) {
         this();
@@ -37,10 +37,10 @@ public class GraphicPanel extends JPanel {
 
     public GraphicPanel() {
         super();
-        this.x0 = 900;
-        this.y0 = 70;
-        this.zoom = 25;
-        this.defaultPeriod = 0.01;
+        this.x0 = 269;
+        this.y0 = 765;
+        this.zoom = 1.432;
+        this.defaultPeriod = 0.05;
         ActionListener listener = new ActionListener() {
             public void actionPerformed(ActionEvent ev) {
                 date++;
@@ -69,7 +69,7 @@ public class GraphicPanel extends JPanel {
 
     public void paintComponent(Graphics g) {
 
-        // System.out.println("GraphicPanel.repaint(); x0 = " + this.x0 + ", y0 = " + this.y0 + ", zoom = " + this.zoom);
+//        System.out.println("GraphicPanel.repaint(); x0 = " + this.x0 + ", y0 = " + this.y0 + ", zoom = " + this.zoom);
         this.eraseAll(g);
 
         double panelHeight = this.getSize().getHeight();
@@ -234,6 +234,16 @@ public class GraphicPanel extends JPanel {
 
     public void breed() {
         world.breed();
+        repaint();
+    }
+
+    public void sortMachines() {
+        world.sortMachines();
+        repaint();
+    }
+
+    public void killHalf() {
+        world.killHalf();
         repaint();
     }
 

@@ -16,8 +16,8 @@ public class Solid {
     public Solid(double xP, double yP) {
         this.pos = new Vector2d(xP, yP);
         this.prevPos = this.pos.clone();
-        this.trail = new ArrayList<Vector2d>();
-        this.maxTrailSize = 50;
+        this.trail = new ArrayList<>();
+        this.maxTrailSize = 15;
         this.date = 0;
         this.trailPeriod = 10;
         this.speed = new Vector2d();
@@ -95,6 +95,9 @@ public class Solid {
 
         this.translate(dt * this.speed.getX(), dt * this.speed.getY());
         this.updateTrail();
+        if (Double.isNaN(getX()) || Double.isNaN(getY())) {
+            setPos(0, 1000000000);
+        }
     }
 
     /* Rotate the solid around the point of coordinates (x0, y0). */

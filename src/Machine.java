@@ -11,13 +11,17 @@
 
 
  */
+import java.awt.Color;
 import java.awt.Graphics;
 import java.util.ArrayList;
 
-public class Machine {
+public class Machine implements Comparable<Machine> {
 
     private static int nbMachinesCreated = 0;
+
     private int machineID;
+
+    private static int NB_POINTS_MAX = 6;
 
     private ArrayList<Point> pointList;
     private ArrayList<Spring> springList;
@@ -35,7 +39,7 @@ public class Machine {
         this.pointList = new ArrayList<>();
         this.springList = new ArrayList<>();
 
-        this.buildMachine(0);
+        this.buildMachine(1);
 
         this.gx = 0;
         this.gy = 0;
@@ -247,6 +251,14 @@ public class Machine {
                     x0, y0, zoom,
                     panelHeight);
         }
+
+        // Display score with four digits after decimal point
+        int xDisplay = (int) (zoom * (this.getXMin() + this.getXMax()) / 2 + x0);
+        int yDisplay = (int) (panelHeight - (zoom * this.getYMax() + y0) - 2 * zoom);
+        g.setColor(Color.black);
+        String text = "" + this.getScore();
+        text = text.substring(0, Math.min(6, text.length()));
+        g.drawString(text, xDisplay, yDisplay);
     }
 
     private void razForces() {
@@ -383,43 +395,67 @@ public class Machine {
 
     /**
      * Add a new Point at a random location, and link that point to the machine
-     * with two springs.
+     * with two springs. Does nothing if the maximum number of points is already
+     * reached.
      */
     public void addRandomPoint() {
+        if (this.pointList.size() < NB_POINTS_MAX) {
 
-        double margin = 5; // how far the new point is allowed to be
+            double margin = 5; // how far the new point is allowed to be
 
-        double xMin = getXMin() - margin;
-        double xMax = getXMax() + margin;
-        double yMin = getYMin() - margin;
-        double yMax = getYMax() + margin;
+            double xMin = getXMin() - margin;
+            double xMax = getXMax() + margin;
+            double yMin = getYMin() - margin;
+            double yMax = getYMax() + margin;
 
-        double x = xMin + Math.random() * (xMax - xMin);
-        double y = yMin + Math.random() * (yMax - yMin);
+            double x = xMin + Math.random() * (xMax - xMin);
+            double y = yMin + Math.random() * (yMax - yMin);
 
-        Point newPoint = new Point(x, y, 1);
+            Point newPoint = new Point(x, y, 1);
+
+            int size = pointList.size();
+            if (size >= 1) {
+                // Create one spring.
+                int index0 = (int) (size * Math.random());
+                Spring spring0 = new Spring(newPoint, pointList.get(index0));
+                springList.add(spring0);
+                if (size >= 2) {
+                    // Create another spring
+                    int index1 = (int) (size * Math.random());
+                    // but not from the same point as the first spring !
+                    if (index1 == index0) {
+                        index1 = index1 + 1;
+                        if (index1 >= size) {
+                            index1 = 0;
+                        }
+                    }
+                    Spring spring1 = new Spring(newPoint, pointList.get(index1));
+                    springList.add(spring1);
+                }
+            }
+            pointList.add(newPoint);
+        }
+    }
+
+    /**
+     * Choose a random point in the machine, and remove it. The springs linked
+     * to that point are removed as well.
+     */
+    public void removeRandomPoint() {
+
+        System.out.println("removing point");
 
         int size = pointList.size();
         if (size >= 1) {
-            // Create one spring.
-            int index0 = (int) (size * Math.random());
-            Spring spring0 = new Spring(newPoint, pointList.get(index0));
-            springList.add(spring0);
-            if (size >= 2) {
-                // Create another spring
-                int index1 = (int) (size * Math.random());
-                // but not from the same point as the first spring !
-                if (index1 == index0) {
-                    index1 = index1 + 1;
-                    if (index1 >= size) {
-                        index1 = 0;
-                    }
+            int index = (int) (size * Math.random());
+            Point removedPoint = pointList.get(index);
+            pointList.remove(removedPoint);
+            for (Spring s : springList) {
+                if (s.usesPoint(removedPoint)) {
+                    springList.remove(s);
                 }
-                Spring spring1 = new Spring(newPoint, pointList.get(index1));
-                springList.add(spring1);
             }
         }
-        pointList.add(newPoint);
     }
 
     /**
@@ -489,6 +525,50 @@ public class Machine {
             addRandomPoint();
         }
 
+        double probRemovePoint = 0.05;
+        if (Math.random() <= probRemovePoint) {
+            removeRandomPoint();
+        }
+
         changeRandomSpringLength();
+    }
+
+    /**
+     * Compute a score for the machine. The score may be the height of the
+     * machine, or the maximum force in the springs, ...
+     *
+     * @return the current value of the machine
+     */
+    public double getScore() {
+
+        double result;
+
+        result = getYMax() - getYMin();
+
+        if (result == Double.NaN) {
+            return -1;
+        }
+
+        if (result > 10000000) {
+            return -1;
+        }
+
+        // Penalty if the machine goes below 0 vertically
+        if (getYMin() < 0) {
+            result += 20 * getYMin();
+        }
+
+        return result;
+    }
+
+    @Override
+    public int compareTo(Machine m) {
+        if (this.getScore() > m.getScore()) {
+            return -1;
+        } else if (this.getScore() < m.getScore()) {
+            return +1;
+        } else {
+            return 0;
+        }
     }
 }
