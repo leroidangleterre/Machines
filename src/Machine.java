@@ -21,7 +21,7 @@ public class Machine implements Comparable<Machine> {
 
     private int machineID;
 
-    private static int NB_POINTS_MAX = 6;
+    private static int NB_POINTS_MAX = 13;
 
     private ArrayList<Point> pointList;
     private ArrayList<Spring> springList;
@@ -95,12 +95,12 @@ public class Machine implements Comparable<Machine> {
      * Build a machine of the chosen type.
      *
      * @param type
-     * @value 0: regular polygon
      * @value 1: one sphere
      * @value 2: two spheres
      * @value 3: three spheres, one spring
      * @value 4: triangular mesh of points
      * @value 5: square-based rectangular mesh, with each square getting two diagonals.
+     * @value 6: regular polygon
      */
     private void buildMachine(int type) {
         this.buildMachine(type, false);
@@ -111,41 +111,15 @@ public class Machine implements Comparable<Machine> {
         ArrayList<ArrayList<Point>> list;
 
         switch (type) {
-            case 0:
-                /* Regular polygon */
-                int nbPoints = 4;
-                double x,
-                 y;
-                double radius = 5;
-                for (int i = 0; i < nbPoints; i++) {
-                    // Coordinates around a circle
-                    x = 5 * Math.cos(i * 2 * Math.PI / nbPoints) + 6;
-                    y = 5 * Math.sin(i * 2 * Math.PI / nbPoints) + 12;
-                    this.pointList.add(new Point(x, y, 1));
-                    // Link this point to each pre-existing point.
-                    for (int j = 0; j < i; j++) {
-                        // System.out.println("     j=" + j);
-                        // System.out.println("     new spring: " + i + ", " + j);
-                        this.springList.add(new Spring(this.pointList.get(i), this.pointList.get(j)));
-                    }
-                }
-                if (addCenter) {
-                    Point center = new Point(0, 20, 1);
-                    this.pointList.add(center);
-                    for (int i = 0; i < nbPoints; i++) {
-                        this.springList.add(new Spring(center, this.pointList.get(i)));
-                    }
-                }
-
-                break;
             case 1:
                 /* Only one sphere. */
                 this.pointList.add(new Point(5, 4, 1));
                 break;
             case 2:
-                /* Two spheres. */
+                /* Two spheres, one spring. */
                 this.pointList.add(new Point(5, 4, 1));
-                this.pointList.add(new Point(5, 8, 1));
+                this.pointList.add(new Point(5.1, 8, 1));
+                this.springList.add(new Spring(this.pointList.get(0), this.pointList.get(1)));
                 break;
             case 3:
                 /* Three spheres, one spring. */
@@ -156,7 +130,7 @@ public class Machine implements Comparable<Machine> {
                 break;
             case 4:
                 /* Triangular mesh of points. */
-                int size = 13;
+                int size = 2;
                 list = new ArrayList<>();
                 for (int i = 0; i < size; i++) {
                     list.add(i, new ArrayList<>());
@@ -211,6 +185,33 @@ public class Machine implements Comparable<Machine> {
                         }
                     }
                 }
+                break;
+            case 6:
+                /* Regular polygon */
+                int nbPoints = 4;
+                double x,
+                 y;
+                double radius = 5;
+                for (int i = 0; i < nbPoints; i++) {
+                    // Coordinates around a circle
+                    x = 5 * Math.cos(i * 2 * Math.PI / nbPoints) + 6;
+                    y = 5 * Math.sin(i * 2 * Math.PI / nbPoints) + 12;
+                    this.pointList.add(new Point(x, y, 1));
+                    // Link this point to each pre-existing point.
+                    for (int j = 0; j < i; j++) {
+                        // System.out.println("     j=" + j);
+                        // System.out.println("     new spring: " + i + ", " + j);
+                        this.springList.add(new Spring(this.pointList.get(i), this.pointList.get(j)));
+                    }
+                }
+                if (addCenter) {
+                    Point center = new Point(0, 20, 1);
+                    this.pointList.add(center);
+                    for (int i = 0; i < nbPoints; i++) {
+                        this.springList.add(new Spring(center, this.pointList.get(i)));
+                    }
+                }
+
                 break;
             default:
                 break;
@@ -310,6 +311,12 @@ public class Machine implements Comparable<Machine> {
         this.updateSpeeds(dt);
         this.updateSprings();
         this.move(dt);
+    }
+
+    public void razCollisions() {
+        for (Point p : pointList) {
+            p.setColliding(false);
+        }
     }
 
     public int getNbPoints() {
@@ -443,8 +450,7 @@ public class Machine implements Comparable<Machine> {
      */
     public void removeRandomPoint() {
 
-        System.out.println("removing point");
-
+//        System.out.println("removing point");
         int size = pointList.size();
         if (size >= 1) {
             int index = (int) (size * Math.random());
@@ -452,7 +458,8 @@ public class Machine implements Comparable<Machine> {
             pointList.remove(removedPoint);
             for (Spring s : springList) {
                 if (s.usesPoint(removedPoint)) {
-                    springList.remove(s);
+//                    springList.remove(s);
+                    s = new Spring(null, null, 1);
                 }
             }
         }
@@ -520,30 +527,20 @@ public class Machine implements Comparable<Machine> {
      */
     public void mutate() {
 
-        double probAddPoint = 0.05;
+        double probAddPoint = 0.01;
         if (Math.random() <= probAddPoint) {
             addRandomPoint();
         }
 
-        double probRemovePoint = 0.05;
-        if (Math.random() <= probRemovePoint) {
-            removeRandomPoint();
-        }
-
+//        double probRemovePoint = 0.05;
+//        if (Math.random() <= probRemovePoint) {
+//            removeRandomPoint();
+//        }
         changeRandomSpringLength();
     }
 
-    /**
-     * Compute a score for the machine. The score may be the height of the
-     * machine, or the maximum force in the springs, ...
-     *
-     * @return the current value of the machine
-     */
-    public double getScore() {
-
-        double result;
-
-        result = getYMax() - getYMin();
+    private double getAltitude() {
+        double result = getYMax() - getYMin();
 
         if (result == Double.NaN) {
             return -1;
@@ -557,8 +554,83 @@ public class Machine implements Comparable<Machine> {
         if (getYMin() < 0) {
             result += 20 * getYMin();
         }
-
         return result;
+    }
+
+    // Bridge: only two points must touch the ground, and they must be as far apart as possible.
+    private double getBridgeScore() {
+        double result = 0;
+
+        // x-coordinates of the bases of the bridge:
+        double x0 = -1000;
+        double x1 = -1000;
+
+        double threshold = 0.5;
+
+        for (Point p : pointList) {
+            if (p.getY() < threshold && p.getY() > -threshold) {
+                if (x0 == -1000) {
+                    x0 = p.getX();
+//                    System.out.println("x0 = " + x0);
+                } else if (x1 == -1000) {
+                    x1 = p.getX();
+//                    System.out.println("x1 = " + x1);
+                } else {
+                    // At least 3 points touch the ground: not a valid bridge !
+//                    System.out.println("3 points on the ground");
+                    return 0;
+                }
+            }
+            if (p.getY() < 0) {
+                // Do not allow points to reach below ground levels.
+                return 0;
+            }
+
+        }
+        if (x0 != -1000 && x1 != -1000) {
+            // Valid bridge:
+            result = Math.abs(x1 - x0);
+//            System.out.println("valid bridge " + result);
+            return result;
+        }
+
+        // Not a valid bridge:
+        return 0;
+    }
+
+    /**
+     * Compute a higher score if more points are close to the given altitude.
+     *
+     * @return the score for the machine as a plateau.
+     */
+    public double getPlateauScore() {
+
+        double targetAltitude = 10;
+
+        double score = this.getAltitude() + (this.getXMax() - this.getXMin());
+        if (score > targetAltitude) {
+            for (Point p : pointList) {
+                if (p.getY() > targetAltitude) {
+                    // Bonus points for more points above target alti.
+                    score += 1;
+                }
+            }
+        }
+
+        return score;
+    }
+
+    /**
+     * Compute a score for the machine. The score may be the height of the
+     * machine, or the maximum force in the springs, ...
+     *
+     * @return the current value of the machine
+     */
+    public double getScore() {
+
+        return getPlateauScore();
+        //        return getAltitude();
+        //        return getBridgeScore();
     }
 
     @Override
@@ -569,6 +641,12 @@ public class Machine implements Comparable<Machine> {
             return +1;
         } else {
             return 0;
+        }
+    }
+
+    public void extendSprings(double dL) {
+        for (Spring s : springList) {
+            s.setL0(s.getL0() + dL);
         }
     }
 }

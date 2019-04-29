@@ -9,6 +9,8 @@ public class Point extends Solid {
 
     private Color color; // Todo
 
+    private boolean isColliding;
+
     public Point(double x, double y) {
         super(x, y);
         this.radius = 10;
@@ -16,6 +18,7 @@ public class Point extends Solid {
         this.color = Color.RED;
         this.fx = 0;
         this.fy = 0;
+        isColliding = false;
     }
 
     public Point(double x, double y, double radius) {
@@ -51,10 +54,14 @@ public class Point extends Solid {
 //        if (dx == 0) {
 //            System.out.println("dx==0; zoom = " + zoom + ", this.radius = " + this.radius);
 //        }
-        g.setColor(Color.WHITE);
-        g.drawOval(xDisplay, yDisplay, dx, dy);
-        g.setColor(this.color);
+        if (isColliding) {
+            g.setColor(Color.ORANGE);
+        } else {
+            g.setColor(this.color);
+        }
         g.fillOval(xDisplay, yDisplay, dx, dy);
+        g.setColor(Color.BLACK);
+        g.drawOval(xDisplay, yDisplay, dx, dy);
         super.display(g, x0, y0, zoom, panelHeight);
     }
 
@@ -118,4 +125,22 @@ public class Point extends Solid {
         }
     }
 
+    /**
+     * Tell the point that it is colliding with something.
+     *
+     * @param param
+     */
+    public void setColliding(boolean param) {
+        isColliding = param;
+//        System.out.println("point at " + getX() + ", " + getY() + ": collision is " + param);
+    }
+
+    /**
+     * Know if the point is currently colliding with something else.
+     *
+     * @return true when a collision is happening
+     */
+    public boolean isColliding() {
+        return isColliding;
+    }
 }

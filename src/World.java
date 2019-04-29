@@ -9,7 +9,7 @@ public class World {
     private ArrayList<Machine> machineList;
     private ArrayList<Block> blockList;
 
-    private static int NB_MACHINES_MAX = 400;
+    private static int NB_MACHINES_MAX = 1000;
 
     private boolean isRunning;
 
@@ -66,7 +66,7 @@ public class World {
             this.machineList.get(i).setGravity(this.gx, this.gy);
         }
 
-        this.collisionList = new ArrayList<Collision>();
+        this.collisionList = new ArrayList<>();
         this.date = 0;
     }
 
@@ -133,6 +133,7 @@ public class World {
          and the order in which the collisions happen is not properly dealt with. */
         for (int i = 0; i < this.machineList.size(); i++) {
             Machine m = this.machineList.get(i);
+            m.razCollisions();
             // m.selfCollide();
             if (this.blockList != null) {
                 for (int j = 0; j < this.blockList.size(); j++) {
@@ -162,33 +163,37 @@ public class World {
 
         double dx = 0, dy = 0, zoomFact = 1;
 
-        for (int i = 0; i < this.machineList.size(); i++) {
+        try {
+            for (int i = 0; i < this.machineList.size(); i++) {
 
-            for (int j = 0; j < this.blockList.size(); j++) {
+                for (int j = 0; j < this.blockList.size(); j++) {
 
-                if (superposed) {
-                    /* Display all machines on the same referential. */
-                    dx = 0;
-                    dy = 0;
-                    zoomFact = 1;
-                } else {
-                    /* Display each machine in a dedicated location. */
-                    int numLine = i / nbMachinesPerColumn;
-                    int numCol = i - numLine * nbMachinesPerColumn;
-                    dx = this.getWidth() * numCol * zoom;
-                    dy = -this.getHeight() * numLine * zoom;
-                    zoomFact = 1;
+                    if (superposed) {
+                        /* Display all machines on the same referential. */
+                        dx = 0;
+                        dy = 0;
+                        zoomFact = 1;
+                    } else {
+                        /* Display each machine in a dedicated location. */
+                        int numLine = i / nbMachinesPerColumn;
+                        int numCol = i - numLine * nbMachinesPerColumn;
+                        dx = this.getWidth() * numCol * zoom;
+                        dy = -this.getHeight() * numLine * zoom;
+                        zoomFact = 1;
+                    }
+
+                    this.blockList.get(j).display(g,
+                            x0 + dx, y0 + dy,
+                            zoom * zoomFact,
+                            (int) panelHeight);
+                    this.machineList.get(i).display(g,
+                            x0 + dx, y0 + dy,
+                            zoom * zoomFact,
+                            (int) panelHeight);
                 }
-
-                this.blockList.get(j).display(g,
-                        x0 + dx, y0 + dy,
-                        zoom * zoomFact,
-                        (int) panelHeight);
-                this.machineList.get(i).display(g,
-                        x0 + dx, y0 + dy,
-                        zoom * zoomFact,
-                        (int) panelHeight);
             }
+        } catch (IndexOutOfBoundsException e) {
+
         }
     }
 
@@ -261,7 +266,7 @@ public class World {
         int i = 0;
         for (Machine m : this.machineList) {
             m.mutate();
-            System.out.println("i = " + i);
+//            System.out.println("i = " + i);
             i++;
         }
     }
@@ -287,7 +292,11 @@ public class World {
      *
      */
     public void sortMachines() {
-        Collections.sort(machineList);
+        try {
+            Collections.sort(machineList);
+        } catch (IllegalArgumentException e) {
+            System.out.println("sorting error");
+        }
     }
 
     /**
@@ -301,4 +310,14 @@ public class World {
         }
     }
 
+    public void extendSprings(double dL) {
+        for (Machine m : machineList) {
+            m.extendSprings(dL);
+        }
+    }
+
+    Machine getBestMachine() {
+        sortMachines();
+        return machineList.get(0);
+    }
 }

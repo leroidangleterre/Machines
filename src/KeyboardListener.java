@@ -8,11 +8,11 @@ public class KeyboardListener implements KeyListener {
     public KeyboardListener(GraphicPanel p) {
         super();
         this.panel = p;
-        System.out.println("New KeyboardListener");
+//        System.out.println("New KeyboardListener");
     }
 
     public void keyPressed(KeyEvent e) {
-        System.out.println("KeyPressed: '" + e.getKeyChar() + "'");
+//        System.out.println("KeyPressed: '" + e.getKeyChar() + "'");
         switch (e.getKeyChar()) {
             case '0':
                 panel.resetView();
@@ -30,25 +30,33 @@ public class KeyboardListener implements KeyListener {
                 panel.swipe(0, -1);
                 break;
             case '+':
-                panel.zoomIn();
+                panel.extendSprings(0.1);
+//                panel.zoomIn();
                 break;
             case '-':
-                panel.zoomOut();
+                panel.extendSprings(-0.1);
+//                panel.zoomOut();
                 break;
             case ' ':
                 panel.evolve(0.1);
                 break;
+            case 'a':
+                panel.doCompleteEvolutionStep();
+                break;
             case 'g':
                 panel.toggleGravity();
-                break;
-            case 'p':
-                panel.togglePlayPause();
                 break;
             case 'b':
                 panel.blockSpeeds();
                 break;
             case 'm':
                 panel.mutate();
+                break;
+            case 'p':
+                panel.togglePlayPause();
+                break;
+            case 's':
+                panel.sortMachines();
                 break;
             case '*':
                 panel.increaseSpringSize(1.1);

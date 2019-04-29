@@ -1,9 +1,7 @@
-import java.util.ArrayList;
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Graphics;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -37,9 +35,9 @@ public class GraphicPanel extends JPanel {
 
     public GraphicPanel() {
         super();
-        this.x0 = 269;
-        this.y0 = 765;
-        this.zoom = 1.432;
+        this.x0 = 206;
+        this.y0 = 548;
+        this.zoom = 5.438;
         this.defaultPeriod = 0.05;
         ActionListener listener = new ActionListener() {
             public void actionPerformed(ActionEvent ev) {
@@ -67,6 +65,7 @@ public class GraphicPanel extends JPanel {
                 (int) (this.getSize().getHeight()));
     }
 
+    @Override
     public void paintComponent(Graphics g) {
 
 //        System.out.println("GraphicPanel.repaint(); x0 = " + this.x0 + ", y0 = " + this.y0 + ", zoom = " + this.zoom);
@@ -247,4 +246,16 @@ public class GraphicPanel extends JPanel {
         repaint();
     }
 
+    public void extendSprings(double dL) {
+        world.extendSprings(dL);
+    }
+
+    void doCompleteEvolutionStep() {
+        System.out.println("do complete evol step");
+        world.sortMachines();
+        world.killHalf();
+        world.breed();
+        world.mutate();
+        repaint();
+    }
 }

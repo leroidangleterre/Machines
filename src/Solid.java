@@ -19,7 +19,7 @@ public class Solid {
         this.trail = new ArrayList<>();
         this.maxTrailSize = 15;
         this.date = 0;
-        this.trailPeriod = 10;
+        this.trailPeriod = 0;
         this.speed = new Vector2d();
     }
 
@@ -62,22 +62,24 @@ public class Solid {
     public void updateTrail() {
 
         this.date++;
-        if (this.trailPeriod * (this.date / this.trailPeriod) == this.date) {
+        if (trailPeriod != 0) {
+            if (this.trailPeriod * (this.date / this.trailPeriod) == this.date) {
 
-            /* Add the current position at the first rank in the trail. */
-            this.trail.add(0, pos.clone());
+                /* Add the current position at the first rank in the trail. */
+                this.trail.add(0, pos.clone());
 
-            /* Keep the trail at or below the max of authorized positions. */
-            try {
-                if (this.maxTrailSize >= 0) {
-                    if (this.trail.size() >= this.maxTrailSize) {
-                        // System.out.println("trail is too long, current =" + this.trail.size() + ", max = " + this.maxTrailSize);
-                        this.trail.remove(this.trail.size() - 1);
+                /* Keep the trail at or below the max of authorized positions. */
+                try {
+                    if (this.maxTrailSize >= 0) {
+                        if (this.trail.size() >= this.maxTrailSize) {
+                            // System.out.println("trail is too long, current =" + this.trail.size() + ", max = " + this.maxTrailSize);
+                            this.trail.remove(this.trail.size() - 1);
+                        }
                     }
+                    // If the max is set to -1, it means infinite track.
+                } catch (IndexOutOfBoundsException e) {
+                    System.out.println("Trail error");
                 }
-                // If the max is set to -1, it means infinite track.
-            } catch (IndexOutOfBoundsException e) {
-                System.out.println("Trail error");
             }
         }
     }
