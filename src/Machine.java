@@ -11,13 +11,17 @@
 
 
  */
+import java.awt.Color;
 import java.awt.Graphics;
 import java.util.ArrayList;
 
-public class Machine {
+public class Machine implements Comparable<Machine> {
 
     private static int nbMachinesCreated = 0;
+
     private int machineID;
+
+    private static int NB_POINTS_MAX = 13;
 
     private ArrayList<Point> pointList;
     private ArrayList<Spring> springList;
@@ -35,7 +39,7 @@ public class Machine {
         this.pointList = new ArrayList<>();
         this.springList = new ArrayList<>();
 
-        this.buildMachine(0);
+        this.buildMachine(1);
 
         this.gx = 0;
         this.gy = 0;
@@ -91,12 +95,12 @@ public class Machine {
      * Build a machine of the chosen type.
      *
      * @param type
-     * @value 0: regular polygon
      * @value 1: one sphere
      * @value 2: two spheres
      * @value 3: three spheres, one spring
      * @value 4: triangular mesh of points
      * @value 5: square-based rectangular mesh, with each square getting two diagonals.
+     * @value 6: regular polygon
      */
     private void buildMachine(int type) {
         this.buildMachine(type, false);
@@ -107,41 +111,15 @@ public class Machine {
         ArrayList<ArrayList<Point>> list;
 
         switch (type) {
-            case 0:
-                /* Regular polygon */
-                int nbPoints = 4;
-                double x,
-                 y;
-                double radius = 5;
-                for (int i = 0; i < nbPoints; i++) {
-                    // Coordinates around a circle
-                    x = 5 * Math.cos(i * 2 * Math.PI / nbPoints) + 6;
-                    y = 5 * Math.sin(i * 2 * Math.PI / nbPoints) + 12;
-                    this.pointList.add(new Point(x, y, 1));
-                    // Link this point to each pre-existing point.
-                    for (int j = 0; j < i; j++) {
-                        // System.out.println("     j=" + j);
-                        // System.out.println("     new spring: " + i + ", " + j);
-                        this.springList.add(new Spring(this.pointList.get(i), this.pointList.get(j)));
-                    }
-                }
-                if (addCenter) {
-                    Point center = new Point(0, 20, 1);
-                    this.pointList.add(center);
-                    for (int i = 0; i < nbPoints; i++) {
-                        this.springList.add(new Spring(center, this.pointList.get(i)));
-                    }
-                }
-
-                break;
             case 1:
                 /* Only one sphere. */
                 this.pointList.add(new Point(5, 4, 1));
                 break;
             case 2:
-                /* Two spheres. */
+                /* Two spheres, one spring. */
                 this.pointList.add(new Point(5, 4, 1));
-                this.pointList.add(new Point(5, 8, 1));
+                this.pointList.add(new Point(5.1, 8, 1));
+                this.springList.add(new Spring(this.pointList.get(0), this.pointList.get(1)));
                 break;
             case 3:
                 /* Three spheres, one spring. */
@@ -152,7 +130,7 @@ public class Machine {
                 break;
             case 4:
                 /* Triangular mesh of points. */
-                int size = 13;
+                int size = 2;
                 list = new ArrayList<>();
                 for (int i = 0; i < size; i++) {
                     list.add(i, new ArrayList<>());
@@ -208,6 +186,33 @@ public class Machine {
                     }
                 }
                 break;
+            case 6:
+                /* Regular polygon */
+                int nbPoints = 4;
+                double x,
+                 y;
+                double radius = 5;
+                for (int i = 0; i < nbPoints; i++) {
+                    // Coordinates around a circle
+                    x = 5 * Math.cos(i * 2 * Math.PI / nbPoints) + 6;
+                    y = 5 * Math.sin(i * 2 * Math.PI / nbPoints) + 12;
+                    this.pointList.add(new Point(x, y, 1));
+                    // Link this point to each pre-existing point.
+                    for (int j = 0; j < i; j++) {
+                        // System.out.println("     j=" + j);
+                        // System.out.println("     new spring: " + i + ", " + j);
+                        this.springList.add(new Spring(this.pointList.get(i), this.pointList.get(j)));
+                    }
+                }
+                if (addCenter) {
+                    Point center = new Point(0, 20, 1);
+                    this.pointList.add(center);
+                    for (int i = 0; i < nbPoints; i++) {
+                        this.springList.add(new Spring(center, this.pointList.get(i)));
+                    }
+                }
+
+                break;
             default:
                 break;
         }
@@ -247,6 +252,14 @@ public class Machine {
                     x0, y0, zoom,
                     panelHeight);
         }
+
+        // Display score with four digits after decimal point
+        int xDisplay = (int) (zoom * (this.getXMin() + this.getXMax()) / 2 + x0);
+        int yDisplay = (int) (panelHeight - (zoom * this.getYMax() + y0) - 2 * zoom);
+        g.setColor(Color.black);
+        String text = "" + this.getScore();
+        text = text.substring(0, Math.min(6, text.length()));
+        g.drawString(text, xDisplay, yDisplay);
     }
 
     private void razForces() {
@@ -298,6 +311,12 @@ public class Machine {
         this.updateSpeeds(dt);
         this.updateSprings();
         this.move(dt);
+    }
+
+    public void razCollisions() {
+        for (Point p : pointList) {
+            p.setColliding(false);
+        }
     }
 
     public int getNbPoints() {
@@ -383,43 +402,67 @@ public class Machine {
 
     /**
      * Add a new Point at a random location, and link that point to the machine
-     * with two springs.
+     * with two springs. Does nothing if the maximum number of points is already
+     * reached.
      */
     public void addRandomPoint() {
+        if (this.pointList.size() < NB_POINTS_MAX) {
 
-        double margin = 5; // how far the new point is allowed to be
+            double margin = 5; // how far the new point is allowed to be
 
-        double xMin = getXMin() - margin;
-        double xMax = getXMax() + margin;
-        double yMin = getYMin() - margin;
-        double yMax = getYMax() + margin;
+            double xMin = getXMin() - margin;
+            double xMax = getXMax() + margin;
+            double yMin = getYMin() - margin;
+            double yMax = getYMax() + margin;
 
-        double x = xMin + Math.random() * (xMax - xMin);
-        double y = yMin + Math.random() * (yMax - yMin);
+            double x = xMin + Math.random() * (xMax - xMin);
+            double y = yMin + Math.random() * (yMax - yMin);
 
-        Point newPoint = new Point(x, y, 1);
+            Point newPoint = new Point(x, y, 1);
 
+            int size = pointList.size();
+            if (size >= 1) {
+                // Create one spring.
+                int index0 = (int) (size * Math.random());
+                Spring spring0 = new Spring(newPoint, pointList.get(index0));
+                springList.add(spring0);
+                if (size >= 2) {
+                    // Create another spring
+                    int index1 = (int) (size * Math.random());
+                    // but not from the same point as the first spring !
+                    if (index1 == index0) {
+                        index1 = index1 + 1;
+                        if (index1 >= size) {
+                            index1 = 0;
+                        }
+                    }
+                    Spring spring1 = new Spring(newPoint, pointList.get(index1));
+                    springList.add(spring1);
+                }
+            }
+            pointList.add(newPoint);
+        }
+    }
+
+    /**
+     * Choose a random point in the machine, and remove it. The springs linked
+     * to that point are removed as well.
+     */
+    public void removeRandomPoint() {
+
+//        System.out.println("removing point");
         int size = pointList.size();
         if (size >= 1) {
-            // Create one spring.
-            int index0 = (int) (size * Math.random());
-            Spring spring0 = new Spring(newPoint, pointList.get(index0));
-            springList.add(spring0);
-            if (size >= 2) {
-                // Create another spring
-                int index1 = (int) (size * Math.random());
-                // but not from the same point as the first spring !
-                if (index1 == index0) {
-                    index1 = index1 + 1;
-                    if (index1 >= size) {
-                        index1 = 0;
-                    }
+            int index = (int) (size * Math.random());
+            Point removedPoint = pointList.get(index);
+            pointList.remove(removedPoint);
+            for (Spring s : springList) {
+                if (s.usesPoint(removedPoint)) {
+//                    springList.remove(s);
+                    s = new Spring(null, null, 1);
                 }
-                Spring spring1 = new Spring(newPoint, pointList.get(index1));
-                springList.add(spring1);
             }
         }
-        pointList.add(newPoint);
     }
 
     /**
@@ -484,11 +527,126 @@ public class Machine {
      */
     public void mutate() {
 
-        double probAddPoint = 0.05;
+        double probAddPoint = 0.01;
         if (Math.random() <= probAddPoint) {
             addRandomPoint();
         }
 
+//        double probRemovePoint = 0.05;
+//        if (Math.random() <= probRemovePoint) {
+//            removeRandomPoint();
+//        }
         changeRandomSpringLength();
+    }
+
+    private double getAltitude() {
+        double result = getYMax() - getYMin();
+
+        if (result == Double.NaN) {
+            return -1;
+        }
+
+        if (result > 10000000) {
+            return -1;
+        }
+
+        // Penalty if the machine goes below 0 vertically
+        if (getYMin() < 0) {
+            result += 20 * getYMin();
+        }
+        return result;
+    }
+
+    // Bridge: only two points must touch the ground, and they must be as far apart as possible.
+    private double getBridgeScore() {
+        double result = 0;
+
+        // x-coordinates of the bases of the bridge:
+        double x0 = -1000;
+        double x1 = -1000;
+
+        double threshold = 0.5;
+
+        for (Point p : pointList) {
+            if (p.getY() < threshold && p.getY() > -threshold) {
+                if (x0 == -1000) {
+                    x0 = p.getX();
+//                    System.out.println("x0 = " + x0);
+                } else if (x1 == -1000) {
+                    x1 = p.getX();
+//                    System.out.println("x1 = " + x1);
+                } else {
+                    // At least 3 points touch the ground: not a valid bridge !
+//                    System.out.println("3 points on the ground");
+                    return 0;
+                }
+            }
+            if (p.getY() < 0) {
+                // Do not allow points to reach below ground levels.
+                return 0;
+            }
+
+        }
+        if (x0 != -1000 && x1 != -1000) {
+            // Valid bridge:
+            result = Math.abs(x1 - x0);
+//            System.out.println("valid bridge " + result);
+            return result;
+        }
+
+        // Not a valid bridge:
+        return 0;
+    }
+
+    /**
+     * Compute a higher score if more points are close to the given altitude.
+     *
+     * @return the score for the machine as a plateau.
+     */
+    public double getPlateauScore() {
+
+        double targetAltitude = 10;
+
+        double score = this.getAltitude() + (this.getXMax() - this.getXMin());
+        if (score > targetAltitude) {
+            for (Point p : pointList) {
+                if (p.getY() > targetAltitude) {
+                    // Bonus points for more points above target alti.
+                    score += 1;
+                }
+            }
+        }
+
+        return score;
+    }
+
+    /**
+     * Compute a score for the machine. The score may be the height of the
+     * machine, or the maximum force in the springs, ...
+     *
+     * @return the current value of the machine
+     */
+    public double getScore() {
+
+        return getPlateauScore();
+        //        return getAltitude();
+        //        return getBridgeScore();
+    }
+
+    @Override
+    public int compareTo(Machine m) {
+        if (this.getScore() > m.getScore()) {
+            return -1;
+        } else if (this.getScore() < m.getScore()) {
+            return +1;
+        } else {
+            return 0;
+        }
+    }
+
+    public void extendSprings(double dL) {
+        for (Spring s : springList) {
+            s.setL0(s.getL0() + dL);
+        }
     }
 }

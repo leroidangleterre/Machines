@@ -10,10 +10,12 @@ public class Spring {
     private double strength;
     private double damping; // 0 <-> no damping, 1 <-> max damping. TODO
 
+    private static double MAX_LENGTH = 5;
+
     public Spring(Point a, Point b) {
         this.start = a;
         this.end = b;
-        this.l0 = this.getLength();
+        this.setL0(this.getLength());
         this.prevLength = this.l0;
         this.strength = 200;
         this.damping = 1000.0;
@@ -42,7 +44,7 @@ public class Spring {
     }
 
     public void setL0(double l0) {
-        this.l0 = l0;
+        this.l0 = Math.min(l0, MAX_LENGTH);
     }
 
     public double getL0() {
@@ -100,6 +102,9 @@ public class Spring {
             // System.out.println("Spring.applyForce(): length = " + this.getLength());
             if (this.getLength() > 0.001) {
 
+                if (l0 == 0) {
+                    System.out.println("warning Spring l0 == 0");
+                }
                 dfxElastic = -(this.strength * dl * (dx / this.l0));
 //                System.out.println("l0 = " + l0 + ", strength = " + strength);
                 dfxDamping = this.damping * (this.prevLength - this.getLength()) * (dx / this.l0);
@@ -134,7 +139,7 @@ public class Spring {
 
     public void increaseSize(double fact) {
         this.prevLength = this.l0;
-        this.l0 = this.l0 * fact;
+        this.setL0(this.l0 * fact);
     }
 
     /**

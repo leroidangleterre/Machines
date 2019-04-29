@@ -1,9 +1,7 @@
-import java.util.ArrayList;
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Graphics;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -15,7 +13,7 @@ public class GraphicPanel extends JPanel {
      The zoom value is the amount of pixels between that origin
      and the point of coordinates (1, 0).  */
     private double x0, y0, zoom;
-    private int nbMachinesPerCol = 8; // When not superposed, how many columns we want to see
+    private int nbMachinesPerCol = 40; // When not superposed, how many columns we want to see
 
     private World world;
     private Timer timer;
@@ -29,7 +27,7 @@ public class GraphicPanel extends JPanel {
 
     /* Either the machines are superposed (each one is displayed in the same referential),
      or they all have their own referential. */
-    private boolean superposed = true;
+    private boolean superposed = false;
 
     public GraphicPanel(Window w) {
         this();
@@ -37,10 +35,10 @@ public class GraphicPanel extends JPanel {
 
     public GraphicPanel() {
         super();
-        this.x0 = 900;
-        this.y0 = 70;
-        this.zoom = 25;
-        this.defaultPeriod = 0.01;
+        this.x0 = 206;
+        this.y0 = 548;
+        this.zoom = 5.438;
+        this.defaultPeriod = 0.05;
         ActionListener listener = new ActionListener() {
             public void actionPerformed(ActionEvent ev) {
                 date++;
@@ -67,9 +65,10 @@ public class GraphicPanel extends JPanel {
                 (int) (this.getSize().getHeight()));
     }
 
+    @Override
     public void paintComponent(Graphics g) {
 
-        // System.out.println("GraphicPanel.repaint(); x0 = " + this.x0 + ", y0 = " + this.y0 + ", zoom = " + this.zoom);
+//        System.out.println("GraphicPanel.repaint(); x0 = " + this.x0 + ", y0 = " + this.y0 + ", zoom = " + this.zoom);
         this.eraseAll(g);
 
         double panelHeight = this.getSize().getHeight();
@@ -237,4 +236,26 @@ public class GraphicPanel extends JPanel {
         repaint();
     }
 
+    public void sortMachines() {
+        world.sortMachines();
+        repaint();
+    }
+
+    public void killHalf() {
+        world.killHalf();
+        repaint();
+    }
+
+    public void extendSprings(double dL) {
+        world.extendSprings(dL);
+    }
+
+    void doCompleteEvolutionStep() {
+        System.out.println("do complete evol step");
+        world.sortMachines();
+        world.killHalf();
+        world.breed();
+        world.mutate();
+        repaint();
+    }
 }

@@ -15,6 +15,8 @@ public class Toolbar extends JPanel {
     private JButton buttonSuperposition;
     private JButton buttonMutate;
     private JButton buttonBreed;
+    private JButton buttonSort;
+    private JButton buttonKillHalf;
 
     private GraphicPanel panel;
 
@@ -54,13 +56,21 @@ public class Toolbar extends JPanel {
         });
         this.add(this.buttonSuperposition);
 
-        this.buttonMutate = new JButton("Mutate");
-        this.buttonMutate.addActionListener(new ActionListener() {
+        this.buttonSort = new JButton("Sort");
+        this.buttonSort.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                panel.mutate();
+                panel.sortMachines();
             }
         });
-        this.add(this.buttonMutate);
+        this.add(this.buttonSort);
+
+        this.buttonKillHalf = new JButton("Kill Half");
+        this.buttonKillHalf.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                panel.killHalf();
+            }
+        });
+        this.add(this.buttonKillHalf);
 
         this.buttonBreed = new JButton("Breed");
         this.buttonBreed.addActionListener(new ActionListener() {
@@ -69,6 +79,14 @@ public class Toolbar extends JPanel {
             }
         });
         this.add(this.buttonBreed);
+
+        this.buttonMutate = new JButton("Mutate");
+        this.buttonMutate.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                panel.mutate();
+            }
+        });
+        this.add(this.buttonMutate);
     }
 
     public void setKeyListener(KeyboardListener k) {
@@ -78,5 +96,7 @@ public class Toolbar extends JPanel {
         this.buttonSuperposition.addKeyListener(k);
         this.buttonMutate.addKeyListener(k);
         this.buttonBreed.addKeyListener(k);
+        this.buttonSort.addKeyListener(k);
+        this.buttonKillHalf.addKeyListener(k);
     }
 }
